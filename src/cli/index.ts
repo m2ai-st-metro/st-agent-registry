@@ -16,6 +16,8 @@
  *   pull <ids...>     - Pull personas from registry
  *   cache             - Manage local cache
  *   serve             - Start the MCP server
+ *   graduate <path>   - Evaluate graduation gates for Agent mode
+ *   promote <path>    - Promote persona to Agent mode (Metroplex build)
  */
 
 import { Command } from 'commander';
@@ -32,6 +34,7 @@ import { cacheCommand } from './commands/cache.js';
 import { serveCommand } from './commands/serve.js';
 import { departmentCommand } from './commands/department.js';
 import { graduateCommand } from './commands/graduate.js';
+import { promoteCommand } from './commands/promote.js';
 
 const program = new Command();
 
@@ -61,6 +64,7 @@ program.addCommand(departmentCommand);
 
 // Graduation & tiering commands
 program.addCommand(graduateCommand);
+program.addCommand(promoteCommand);
 
 // MCP server command
 program.addCommand(serveCommand);
