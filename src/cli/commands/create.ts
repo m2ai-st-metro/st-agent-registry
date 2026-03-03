@@ -28,6 +28,7 @@ export const createCommand = new Command('create')
   .option('-i, --interactive', 'Use interactive mode with guided prompts', true)
   .option('-t, --template <type>', 'Template type: full, minimal', 'full')
   .option('-o, --output <path>', 'Output directory', './personas')
+  .option('-a, --agent', 'Scaffold as Agent mode (includes agent_config + tier.yaml)', false)
   .option('--no-interactive', 'Skip interactive prompts, use template only')
   .action(async (name: string, options) => {
     const spinner = ora();
@@ -65,8 +66,9 @@ export const createCommand = new Command('create')
       }
 
       // Generate YAML content
-      spinner.start('Generating persona files...');
-      const yamlContent = generatePersonaYaml(personaData);
+      const isAgentMode = options.agent === true;
+      spinner.start(`Generating ${isAgentMode ? 'agent' : 'persona'} files...`);
+      const yamlContent = generatePersonaYaml(personaData, isAgentMode);
 
       // Create directory and write files
       mkdirSync(outputDir, { recursive: true });
@@ -76,12 +78,24 @@ export const createCommand = new Command('create')
       const readmeContent = generatePersonaReadme(personaData);
       writeFileSync(join(outputDir, 'README.md'), readmeContent);
 
-      spinner.succeed(chalk.green('Persona created successfully!'));
+      // Create tier.yaml
+      const tierContent = generateTierYaml(kebabName, isAgentMode);
+      writeFileSync(join(outputDir, 'tier.yaml'), tierContent);
+
+      spinner.succeed(chalk.green(`${isAgentMode ? 'Agent' : 'Persona'} created successfully!`));
 
       // Print next steps
       console.log(chalk.cyan('\n📁 Created files:'));
       console.log(`   ${outputDir}/persona.yaml`);
+      console.log(`   ${outputDir}/tier.yaml`);
       console.log(`   ${outputDir}/README.md`);
+
+      if (isAgentMode) {
+        console.log(chalk.cyan('\n🤖 Agent mode scaffolding included:'));
+        console.log(`   - agent_config section in persona.yaml`);
+        console.log(`   - tier.yaml set to mode: agent`);
+        console.log(`   - Create a prompt file in yce-harness/prompts/ to match prompt_file`);
+      }
 
       console.log(chalk.cyan('\n🚀 Next steps:'));
       console.log(`   1. Edit ${chalk.bold('persona.yaml')} to refine your persona`);
@@ -91,9 +105,15 @@ export const createCommand = new Command('create')
       console.log(
         `   3. Run ${chalk.bold(`persona-academy test ${outputDir}`)} to validate fidelity`,
       );
-      console.log(
-        `   4. Run ${chalk.bold(`persona-academy build ${outputDir}`)} to create MCP server`,
-      );
+      if (isAgentMode) {
+        console.log(
+          `   4. Run ${chalk.bold(`persona-academy graduate ${outputDir}`)} to check graduation gates`,
+        );
+      } else {
+        console.log(
+          `   4. Run ${chalk.bold(`persona-academy build ${outputDir}`)} to create MCP server`,
+        );
+      }
     } catch (error) {
       spinner.fail(chalk.red('Failed to create persona'));
       if (error instanceof Error) {
@@ -311,9 +331,29 @@ function getMinimalTemplate(kebabName: string): PersonaData {
 }
 
 /**
+ * Generate tier.yaml content
+ */
+function generateTierYaml(name: string, isAgent: boolean): string {
+  const today = new Date().toISOString().split('T')[0];
+  const tier: Record<string, unknown> = {
+    mode: isAgent ? 'agent' : 'persona',
+    ...(isAgent && {
+      promoted_at: today,
+      promoted_by: 'cli-scaffold',
+      promotion_reason: 'Created with --agent flag',
+    }),
+    graduation_gates: {},
+    history: [],
+  };
+
+  return `# Tier metadata for ${name}\n# Managed by Academy v2 tiering system\n\n` +
+    yamlStringify(tier, { lineWidth: 100 });
+}
+
+/**
  * Generate persona YAML content
  */
-function generatePersonaYaml(data: PersonaData): string {
+function generatePersonaYaml(data: PersonaData, includeAgentConfig = false): string {
   const persona = {
     identity: {
       name: data.displayName,
@@ -373,6 +413,19 @@ function generatePersonaYaml(data: PersonaData): string {
         },
       ],
     },
+    ...(includeAgentConfig && {
+      agent_config: {
+        description: `${data.displayName}: ${data.role}. Edit this description for orchestrator routing.`,
+        prompt_file: `${data.name}_agent_prompt.md`,
+        model: 'sonnet',
+        tools: {
+          groups: ['file_readonly'],
+        },
+        guardrails: {
+          read_only: true,
+        },
+      },
+    }),
     metadata: {
       version: '1.0.0',
       author: 'Agent Persona Academy',

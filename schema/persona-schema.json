@@ -186,6 +186,77 @@
               "items": { "type": "string" }
             }
           }
+        },
+        "max_turns": {
+          "type": "integer",
+          "description": "Maximum agentic turns before stopping",
+          "minimum": 1
+        },
+        "guardrails": {
+          "type": "object",
+          "description": "Safety constraints and guardrails for this agent",
+          "properties": {
+            "bash_allowlist": {
+              "type": "array",
+              "description": "Allowed bash command prefixes",
+              "items": { "type": "string" }
+            },
+            "blocked_patterns": {
+              "type": "array",
+              "description": "Regex patterns to block in agent outputs",
+              "items": { "type": "string" }
+            },
+            "allowed_paths": {
+              "type": "array",
+              "description": "Restrict file access to these path prefixes",
+              "items": { "type": "string" }
+            },
+            "max_file_size": {
+              "type": "integer",
+              "description": "Max file size in bytes for write operations"
+            },
+            "read_only": {
+              "type": "boolean",
+              "description": "Enforce read-only mode (no Write/Edit tools)",
+              "default": false
+            }
+          }
+        },
+        "subagents": {
+          "type": "array",
+          "description": "Subagents this agent can delegate to",
+          "items": {
+            "type": "object",
+            "required": ["name", "description"],
+            "properties": {
+              "name": { "type": "string", "description": "Subagent name" },
+              "description": { "type": "string", "description": "When to delegate to this subagent" },
+              "model": { "type": "string", "enum": ["haiku", "sonnet", "opus", "inherit"] }
+            }
+          }
+        },
+        "hil_gates": {
+          "type": "array",
+          "description": "Human-in-the-loop gates for critical decisions",
+          "items": {
+            "type": "object",
+            "required": ["name", "trigger", "prompt"],
+            "properties": {
+              "name": { "type": "string", "description": "Gate name" },
+              "trigger": { "type": "string", "description": "When this gate triggers" },
+              "prompt": { "type": "string", "description": "Message to show the reviewer" }
+            }
+          }
+        },
+        "mcp_servers": {
+          "type": "array",
+          "description": "MCP servers to connect",
+          "items": { "type": "string" }
+        },
+        "permission_mode": {
+          "type": "string",
+          "description": "Permission mode for the agent",
+          "enum": ["acceptEdits", "acceptAll", "ask"]
         }
       }
     },

@@ -31,6 +31,7 @@ import { pullCommand } from './commands/pull.js';
 import { cacheCommand } from './commands/cache.js';
 import { serveCommand } from './commands/serve.js';
 import { departmentCommand } from './commands/department.js';
+import { graduateCommand } from './commands/graduate.js';
 
 const program = new Command();
 
@@ -57,6 +58,9 @@ program.addCommand(cacheCommand);
 
 // Department commands
 program.addCommand(departmentCommand);
+
+// Graduation & tiering commands
+program.addCommand(graduateCommand);
 
 // MCP server command
 program.addCommand(serveCommand);

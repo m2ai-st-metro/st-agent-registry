@@ -271,6 +271,37 @@ export interface AgentToolConfig {
   exclude?: string[];
 }
 
+export interface AgentGuardrails {
+  /** Allowed bash commands (allowlist pattern) */
+  bash_allowlist?: string[];
+  /** Blocked regex patterns in outputs */
+  blocked_patterns?: string[];
+  /** Restrict file access to these paths */
+  allowed_paths?: string[];
+  /** Max file size in bytes for write operations */
+  max_file_size?: number;
+  /** Enforce read-only mode (no Write/Edit tools) */
+  read_only?: boolean;
+}
+
+export interface SubagentConfig {
+  /** Subagent name (maps to another persona or hardcoded agent) */
+  name: string;
+  /** When to delegate to this subagent */
+  description: string;
+  /** Override model for this subagent */
+  model?: AgentModelOption;
+}
+
+export interface HilGate {
+  /** Gate name */
+  name: string;
+  /** When this gate triggers (e.g., "before_deploy", "on_safety_concern") */
+  trigger: string;
+  /** Message to show the human reviewer */
+  prompt: string;
+}
+
 export interface AgentConfig {
   /** Routing description for orchestrator delegation */
   description?: string;
@@ -280,6 +311,65 @@ export interface AgentConfig {
   model?: AgentModelOption;
   /** Tool configuration for this agent */
   tools?: AgentToolConfig;
+  /** Maximum agentic turns before stopping */
+  max_turns?: number;
+  /** Safety constraints and guardrails */
+  guardrails?: AgentGuardrails;
+  /** Subagents this agent can delegate to */
+  subagents?: SubagentConfig[];
+  /** Human-in-the-loop gates */
+  hil_gates?: HilGate[];
+  /** MCP servers to connect */
+  mcp_servers?: string[];
+  /** Permission mode: acceptEdits, acceptAll, ask */
+  permission_mode?: 'acceptEdits' | 'acceptAll' | 'ask';
+}
+
+// ============================================================================
+// Tier Metadata Types (for Academy v2 tiering system)
+// ============================================================================
+
+export type PersonaMode = 'persona' | 'agent';
+
+export interface GraduationGateResult {
+  /** Gate identifier (e.g., G1.1, G1.2) */
+  gate_id: string;
+  /** Gate name */
+  name: string;
+  /** Whether this gate passed */
+  passed: boolean;
+  /** Details or error message */
+  details: string;
+  /** When this gate was last evaluated */
+  evaluated_at: string;
+}
+
+export interface TierTransition {
+  /** Previous mode */
+  from_mode: PersonaMode;
+  /** New mode */
+  to_mode: PersonaMode;
+  /** Who made the decision */
+  decided_by: string;
+  /** Why */
+  reason: string;
+  /** When */
+  transitioned_at: string;
+}
+
+export interface TierMetadata {
+  /** Current mode: persona or agent */
+  mode: PersonaMode;
+  /** When this persona was promoted to agent mode */
+  promoted_at?: string;
+  /** Who approved the promotion */
+  promoted_by?: string;
+  /** Reason for promotion */
+  promotion_reason?: string;
+  /** Results of graduation gate evaluations */
+  graduation_gates: Record<string, GraduationGateResult>;
+  /** History of mode transitions */
+  history: TierTransition[];
 }
 
 // ============================================================================
