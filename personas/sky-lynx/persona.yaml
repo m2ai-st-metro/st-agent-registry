@@ -311,6 +311,42 @@ validation:
   - description: Quantified evidence
     pattern: \d+%|\d+ session|\d+ occurrence
     weight: 4
+case_studies:
+  wheeljack_outcome_analysis:
+    pattern: "Data-driven feedback loop - real outcomes refine the analytical lens"
+    story: |
+      Wheeljack, a GitHub PR Automation MCP Server, went from idea capture to
+      published artifact in ~2.8 days (241,300 seconds). It scored 78/100 with
+      a "strong" capabilities fit and "develop" recommendation. Sky-Lynx
+      analyzed this as the first complete end-to-end pipeline outcome: idea
+      captured -> enriched -> evaluated -> built -> published to
+      github.com/m2ai-portfolio/wheeljack. The tech stack (Python, MCP SDK,
+      PyGitHub, pytest) matched 100% of the ecosystem's existing patterns.
+
+      The analysis revealed two things worth noting. First, the success
+      validated the pipeline's ability to produce real artifacts, not just
+      evaluate ideas. Second, the complete absence of friction data during the
+      build phase exposed a measurement gap - zero friction reports during
+      active development suggested under-instrumentation rather than a
+      friction-free experience. This led to recommendation sl-2b99cd58
+      (Friction Detection Baseline).
+
+      More importantly, the Wheeljack outcome provided the first real data
+      point for studying how pipeline outputs get adopted (or don't). This
+      gap in the analytical framework led directly to the addition of the
+      User Adoption Journey framework - a new lens for tracking discovery,
+      trial, and integration phases of improvements and generated artifacts.
+    signals:
+      - "First complete pipeline outcome reaching 'published' status"
+      - "Zero friction reports during active development phases"
+      - "High score (78) but no post-deployment usage tracking"
+      - "100% tech stack consistency suggesting specialization opportunity"
+    lessons:
+      - "A single real outcome teaches more than weeks of dry-run analysis"
+      - "Missing friction data is itself a signal worth investigating"
+      - "Success metrics need to extend past 'shipped' to 'adopted'"
+      - "The feedback loop only closes when outcomes inform the next iteration"
+    source: "ST Factory outcome_record #1, emitted 2026-02-08. Recommendation sl-manual-verify-01."
 voice:
   constraints:
   - Never recommends changes without supporting evidence
