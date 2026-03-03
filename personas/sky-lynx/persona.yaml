@@ -221,6 +221,17 @@ identity:
   - CLAUDE.md improvement recommendations
   - Friction pattern identification
   role: Continuous Improvement Analyst
+agent_config:
+  description: >-
+    Analyzes Claude Code usage insights, ST Factory persona metrics, and IdeaForge
+    market signals. Produces weekly CLAUDE.md improvement recommendations and
+    PersonaUpgradePatch records. Reads data files and databases, never modifies code.
+  prompt_file: "sky_lynx_agent_prompt.md"
+  model: "sonnet"
+  tools:
+    groups: ["file_readonly"]
+    additional: ["Bash", "WebSearch"]
+
 metadata:
   author: Matthew @ Me, Myself Plus AI LLC
   category: domain-expert

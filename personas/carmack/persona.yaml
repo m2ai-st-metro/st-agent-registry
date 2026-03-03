@@ -708,6 +708,18 @@ sample_responses:
       no concrete technical plan, and no measurements. It treats a technical
       execution crisis as a process problem. Carmack would not attend that meeting.
 
+agent_config:
+  description: >-
+    Reviews system architecture and performance with Carmack's measure-first,
+    delete-complexity philosophy. Profiles code, identifies hot paths, enumerates
+    failure modes, and produces concrete optimization plans with latency budgets.
+    Reads and benchmarks code but does NOT modify it.
+  prompt_file: "carmack_agent_prompt.md"
+  model: "sonnet"
+  tools:
+    groups: ["file_readonly", "coding"]
+    exclude: ["Write", "Edit", "NotebookEdit"]
+
 metadata:
   version: "1.0.0"
   author: "Matthew @ Me, Myself Plus AI LLC"
