@@ -13,11 +13,11 @@
 
 ### Position A: System Architect
 
-The Headmaster is a CLI command with optional cron, not an always-on agent. It is stateless between runs -- all state lives in tier.yaml files (git-tracked), ST Factory DB (metrics), and Metroplex DB (build status). It reads current state, makes decisions, writes updated state. Daily at 6am is sufficient cadence. The Headmaster automates five operations: intake new concepts, assign initial tiers, evaluate graduation criteria against metrics, trigger builds for promotions, and report. The design is conservative: no LLM for tier assignment (deterministic decision tree), 5+ consecutive passing evaluations required before promotion, and demotion requires manual confirmation.
+The Headmaster is a CLI command with optional cron, not an always-on agent. It is stateless between runs -- all state lives in tier.yaml files (git-tracked), ST Records DB (metrics), and Metroplex DB (build status). It reads current state, makes decisions, writes updated state. Daily at 6am is sufficient cadence. The Headmaster automates five operations: intake new concepts, assign initial tiers, evaluate graduation criteria against metrics, trigger builds for promotions, and report. The design is conservative: no LLM for tier assignment (deterministic decision tree), 5+ consecutive passing evaluations required before promotion, and demotion requires manual confirmation.
 
 ### Position B: Devil's Advocate
 
-The Headmaster automates a process that has never been performed manually. Zero tier transitions have occurred. The ST Factory metrics that would drive Headmaster decisions are anemic: 2 outcome records, 2 persona patches (both never applied -- 3,412 consecutive Metroplex skips), and 8 improvement recommendations (3 are dry-run stubs). Building a control system for a process with no history and no data is premature optimization. Matthew manually added `agent_config` to code-reviewer in 15 minutes. This operation happens at most once per quarter.
+The Headmaster automates a process that has never been performed manually. Zero tier transitions have occurred. The ST Records metrics that would drive Headmaster decisions are anemic: 2 outcome records, 2 persona patches (both never applied -- 3,412 consecutive Metroplex skips), and 8 improvement recommendations (3 are dry-run stubs). Building a control system for a process with no history and no data is premature optimization. Matthew manually added `agent_config` to code-reviewer in 15 minutes. This operation happens at most once per quarter.
 
 ### Resolution: DEFER the Headmaster. Build the data first.
 
@@ -64,13 +64,13 @@ The 5-dimension scoring rubric is simplified to a binary decision tree: Does thi
 
 ### Position A: System Architect
 
-The architecture is designed for minimal modification to external systems. Academy remains the persona authority, Metroplex handles builds, YCE Harness executes, ST Factory stores metrics. The new components (Headmaster, Tier2Generator, Tier1Dispatcher, stfactory-reader) are all additive. Existing components get extended, not rewritten. The build pipeline flow is: Academy -> Metroplex priority queue -> SpecGenerator -> YCE Harness -> Gate 4 publish.
+The architecture is designed for minimal modification to external systems. Academy remains the persona authority, Metroplex handles builds, YCE Harness executes, ST Records stores metrics. The new components (Headmaster, Tier2Generator, Tier1Dispatcher, stfactory-reader) are all additive. Existing components get extended, not rewritten. The build pipeline flow is: Academy -> Metroplex priority queue -> SpecGenerator -> YCE Harness -> Gate 4 publish.
 
 ### Position B: Integration Architect
 
 Verified the interfaces and found:
 
-1. **Metroplex patcher bug (CONFIRMED)**: `gates/patcher.py` line 183 uses `personas/{persona_id}.yaml` but the actual layout is `personas/{persona_id}/persona.yaml`. This means the ST Factory -> Academy feedback loop has never successfully applied a patch. Independently verified by grep.
+1. **Metroplex patcher bug (CONFIRMED)**: `gates/patcher.py` line 183 uses `personas/{persona_id}.yaml` but the actual layout is `personas/{persona_id}/persona.yaml`. This means the ST Records -> Academy feedback loop has never successfully applied a patch. Independently verified by grep.
 
 2. **Metroplex PriorityItem.source needs "academy"**: `models.py` line 78 defines `source: Literal["ideaforge", "skylynx", "linear"]`. Adding "academy" is a one-line change.
 
@@ -78,9 +78,9 @@ Verified the interfaces and found:
 
 4. **YCE Harness needs NO changes**: It is spec-driven. The spec template is the control surface.
 
-5. **ST Factory needs minimal changes**: Optional `tier_context` field on PersonaUpgradePatch, new enum values on RecommendationType. All backward-compatible.
+5. **ST Records needs minimal changes**: Optional `tier_context` field on PersonaUpgradePatch, new enum values on RecommendationType. All backward-compatible.
 
-Total external modification footprint: 3 files in Metroplex (models.py, build.py, patcher.py bugfix), 2 files in ST Factory (improvement_recommendation.py, persona_upgrade_patch.py), 0 files in YCE Harness, 0 files in IdeaForge.
+Total external modification footprint: 3 files in Metroplex (models.py, build.py, patcher.py bugfix), 2 files in ST Records (improvement_recommendation.py, persona_upgrade_patch.py), 0 files in YCE Harness, 0 files in IdeaForge.
 
 ### Resolution: The design connects to existing components with a SMALL modification footprint, but the patcher bug must be fixed first.
 
@@ -117,7 +117,7 @@ Tier 1 graduation requires 11 gates (G1.1-G1.11), including guardrail verificati
 - G1.2 HIL gates: `permissionDecision: "ask"` in PreToolUse hooks
 - G1.3 Delegation pattern validation: `Task` tool with `AgentDefinition`, single-depth constraint is enforced by SDK
 - G1.8 Observability: SDK emits structured output (AssistantMessage, ToolUseBlock, ResultMessage)
-- G1.9 Outcome recording: Agent can write to ST Factory via Bash/custom tool
+- G1.9 Outcome recording: Agent can write to ST Records via Bash/custom tool
 
 **Achievable with effort (need test infrastructure built):**
 - G1.5 Failure recovery: Requires a chaos test suite (inject tool failures, API errors)
@@ -148,13 +148,13 @@ Three infrastructure failures that change implementation priority:
 
 1. **Dead code (yaml_loader.py)**: The bridge from persona YAML to AgentDefinition exists in yce-harness but is never called. `LOAD_AGENTS_FROM_YAML` is documented in a comment but never referenced by any client initialization code. Verified by grep: no imports of `yaml_loader` exist anywhere in yce-harness except the file itself.
 
-2. **Patcher bug**: Metroplex `gates/patcher.py` line 183 constructs `personas/{persona_id}.yaml` but Academy layout is `personas/{persona_id}/persona.yaml`. Result: 3,412 consecutive patch application skips. The ST Factory -> Academy feedback loop has never completed a single cycle.
+2. **Patcher bug**: Metroplex `gates/patcher.py` line 183 constructs `personas/{persona_id}.yaml` but Academy layout is `personas/{persona_id}/persona.yaml`. Result: 3,412 consecutive patch application skips. The ST Records -> Academy feedback loop has never completed a single cycle.
 
 3. **Thin data**: 2 outcome records (1 published, 1 deferred), 8 improvement recommendations (3 dry-run stubs), 2 persona patches (neither applied), 0 applied patches, 0 applied recommendations. The metrics DB is not empty but it is far too thin to drive automated tiering decisions.
 
 ### Resolution: Fix existing infrastructure BEFORE building new features. Implementation order is repair-first.
 
-**Reasoning**: The Devil's Advocate has identified a fundamental sequencing problem. The proposed v2 architecture assumes a functioning feedback loop: Sky-Lynx produces recommendations, ST Factory stores them, Metroplex applies patches, Academy personas improve, metrics accumulate, and eventually personas get promoted. But this loop is broken at two points:
+**Reasoning**: The Devil's Advocate has identified a fundamental sequencing problem. The proposed v2 architecture assumes a functioning feedback loop: Sky-Lynx produces recommendations, ST Records stores them, Metroplex applies patches, Academy personas improve, metrics accumulate, and eventually personas get promoted. But this loop is broken at two points:
 
 1. The patcher cannot find persona files (path bug) -- so patches never get applied
 2. The yaml_loader is dead code -- so even a manually promoted persona cannot run as an agent via the designed bridge
@@ -241,8 +241,8 @@ Academy v2 extends the persona definition system from prompt-only output (curren
 | Add `"academy"` to `buildable_sources` in `gates/build.py` | Metroplex | 15 min | None |
 | Create `readers/academy_reader.py` (pattern: `readers/skylynx_reader.py`) | Metroplex | 1 day | Source enum updated |
 | Create `spec_templates/tier1_agent_template.md` for Agent SDK builds | Metroplex | 2 days | None |
-| Add optional `tier_context` to `PersonaUpgradePatch` in ST Factory | ST Factory | 1 hour | None |
-| Add `TIER_PROMOTION` to `RecommendationType` enum in ST Factory | ST Factory | 30 min | None |
+| Add optional `tier_context` to `PersonaUpgradePatch` in ST Records | ST Records | 1 hour | None |
+| Add `TIER_PROMOTION` to `RecommendationType` enum in ST Records | ST Records | 30 min | None |
 | Test end-to-end: Academy flags promotion -> Metroplex builds -> YCE generates | All | 2 days | All above |
 | Monitor the feedback loop: confirm patches are being applied post-bugfix | Metroplex | Ongoing | Phase 1 bugfix |
 
@@ -253,7 +253,7 @@ Academy v2 extends the persona definition system from prompt-only output (curren
 **Goal**: If enough data has accumulated and manual promotion has been performed 3+ times, build the Headmaster.
 
 **Gate condition**: Proceed only if:
-- At least 10 outcome records in ST Factory
+- At least 10 outcome records in ST Records
 - At least 3 manual tier transitions have been performed
 - At least 1 patch has been successfully applied by Metroplex
 - Matthew confirms the Headmaster adds value over manual promotion
@@ -262,7 +262,7 @@ Academy v2 extends the persona definition system from prompt-only output (curren
 |------|-------|--------|------------|
 | Implement Headmaster as CLI command (`persona-academy headmaster run`) | Academy | 3 days | Gate conditions met |
 | Implement `stfactory-reader.ts` (read-only SQLite reader for metrics) | Academy | 1 day | None |
-| Implement graduation engine (evaluate criteria against ST Factory metrics) | Academy | 2 days | Reader built |
+| Implement graduation engine (evaluate criteria against ST Records metrics) | Academy | 2 days | Reader built |
 | Implement tier-assigner (deterministic decision tree from System Architect spec) | Academy | 1 day | None |
 | Add `headmaster run`, `headmaster status`, `headmaster promote` CLI commands | Academy CLI | 1 day | Engine built |
 | Set up daily cron for Headmaster (optional, manual invocation first) | Academy | 30 min | CLI working |
@@ -277,7 +277,7 @@ If the gate conditions are NOT met by Week 7, this phase slides to a future quar
 | # | Risk | Likelihood | Impact | Mitigation |
 |---|------|-----------|--------|------------|
 | 1 | **yaml_loader bridge has undiscovered incompatibilities** with current SDK version | Medium | High (blocks Phase 1) | Test immediately with code-reviewer persona; fix issues before expanding to more personas |
-| 2 | **Metroplex patcher bug fix reveals deeper format mismatch** between ST Factory patches and Metroplex patch consumer | Medium | Medium (blocks feedback loop) | Inspect patch JSONL format, compare with Metroplex's expected format, fix both ends if needed |
+| 2 | **Metroplex patcher bug fix reveals deeper format mismatch** between ST Records patches and Metroplex patch consumer | Medium | Medium (blocks feedback loop) | Inspect patch JSONL format, compare with Metroplex's expected format, fix both ends if needed |
 | 3 | **Agent SDK breaking changes** invalidate generated agent code | Low | High | Pin SDK version in requirements.txt, test bridge on each SDK update, keep yce-harness as the canary |
 | 4 | **Scope creep**: desire for Headmaster, Tier 2, or automated graduation pipeline creeps back in before data justifies it | High (ENTP pattern) | High (2-month detour) | This document is the scope contract. No Headmaster before 3 manual promotions. No Tier 2 until a concrete use case emerges |
 | 5 | **Insufficient operational data** after 6 weeks to justify Headmaster | Medium | Low (manual process continues) | Manual promotion works fine at current scale (1-3 promotions/quarter). Headmaster is optimization, not capability |

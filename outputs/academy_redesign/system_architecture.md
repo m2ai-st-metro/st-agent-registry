@@ -41,9 +41,9 @@ The critical architectural decision is: **the Academy remains the persona defini
 | Tier assignment and graduation criteria | Academy (Headmaster) | Tier decisions are persona-domain knowledge |
 | Tier 2 MCP server code generation | Academy | Template-based, deterministic, no LLM needed |
 | Tier 1 agent build orchestration | Metroplex + YCE Harness | Build infrastructure already exists and is proven |
-| Performance metrics and outcome tracking | ST Factory | Already stores outcome_records, persona_patches, improvement_recommendations |
+| Performance metrics and outcome tracking | ST Records | Already stores outcome_records, persona_patches, improvement_recommendations |
 | Persona patches (YAML modifications) | Metroplex (PatchGate) | Already applies patches via git operations |
-| Continuous improvement recommendations | Sky-Lynx + ST Factory | Already produces typed ImprovementRecommendations |
+| Continuous improvement recommendations | Sky-Lynx + ST Records | Already produces typed ImprovementRecommendations |
 
 ---
 
@@ -164,11 +164,11 @@ The critical architectural decision is: **the Academy remains the persona defini
     - Tier 3: loaded by unified MCP server
     - Tier 2: deployed as standalone MCP server (npm run build)
     - Tier 1: deployed via Metroplex PublishGate
-    - All tiers: metrics tracked in ST Factory
+    - All tiers: metrics tracked in ST Records
            |
            v
  7. GRADUATION LOOP
-    - Headmaster reviews metrics from ST Factory
+    - Headmaster reviews metrics from ST Records
     - Promote: T3 -> T2 (add MCP tools), T2 -> T1 (add autonomy)
     - Demote: T1 -> T2 (remove autonomy), T2 -> T3 (remove tools)
     - Retire: remove from active roster
@@ -376,7 +376,7 @@ Rationale:
  2. INTAKE: Check for new agent concepts
     - Sources:
       a. Manual: new persona.yaml without tier.yaml -> needs evaluation
-      b. ST Factory: improvement_recommendations with target_system = 'new_agent'
+      b. ST Records: improvement_recommendations with target_system = 'new_agent'
       c. Ultra-Magnus: ideas tagged 'agent-concept' at BUILD stage
     - For each concept: run Tier Assignment
 
@@ -391,7 +391,7 @@ Rationale:
 
  4. GRADUATION EVALUATION (for existing personas)
     For each persona with graduation_criteria:
-      a. Read metrics from ST Factory:
+      a. Read metrics from ST Records:
          - outcome_records for this persona
          - fidelity scores from most recent evaluations
          - tool invocation counts (if applicable)
@@ -420,7 +420,7 @@ Rationale:
 
 The Headmaster is stateless between runs. All state is persisted in:
 - `personas/<id>/tier.yaml` -- tier metadata, graduation progress
-- ST Factory DB -- outcome records, metrics
+- ST Records DB -- outcome records, metrics
 - Metroplex DB -- build status (if Tier 1 builds were triggered)
 - `outputs/headmaster_runs/` -- run logs (append-only, for audit)
 
@@ -433,7 +433,7 @@ INPUTS:
   - personas/*/persona.yaml (persona definitions)
   - personas/*/tier.yaml (tier state)
   - departments/*/department.yaml (quality criteria, graduation defaults)
-  - ST Factory DB: outcome_records, improvement_recommendations
+  - ST Records DB: outcome_records, improvement_recommendations
   - Metroplex DB: build_jobs (for Tier 1 build status)
 
 OUTPUTS:
@@ -510,16 +510,16 @@ These components are proven and require zero modifications:
 
 | Module | Purpose | Depends On |
 |--------|---------|------------|
-| `src/headmaster/` | Headmaster process: evaluator, tier-assigner, graduation engine | core, departments, st-factory reader |
+| `src/headmaster/` | Headmaster process: evaluator, tier-assigner, graduation engine | core, departments, st-records reader |
 | `src/headmaster/evaluator.ts` | Assess incoming concepts, determine initial tier | core types |
 | `src/headmaster/tier-assigner.ts` | Assign tier based on concept complexity | core types, departments |
-| `src/headmaster/graduation-engine.ts` | Evaluate graduation criteria against metrics | ST Factory reader, core types |
+| `src/headmaster/graduation-engine.ts` | Evaluate graduation criteria against metrics | ST Records reader, core types |
 | `src/headmaster/index.ts` | Orchestrate full Headmaster run cycle | All headmaster modules |
 | `src/builders/` | Tier-specific build logic | core types |
 | `src/builders/tier2-generator.ts` | Generate MCP server from mcp_config.yaml + persona YAML | core, templates |
 | `src/builders/tier1-dispatcher.ts` | Write spec, enqueue to Metroplex priority queue | Metroplex DB path |
 | `src/builders/index.ts` | Builder dispatch | tier2-generator, tier1-dispatcher |
-| `src/readers/stfactory-reader.ts` | Read-only SQLite reader for ST Factory metrics | sqlite3 (via better-sqlite3) |
+| `src/readers/stfactory-reader.ts` | Read-only SQLite reader for ST Records metrics | sqlite3 (via better-sqlite3) |
 | `src/cli/commands/headmaster.ts` | CLI commands for Headmaster | headmaster module |
 | `src/cli/commands/tier.ts` | CLI commands for tier inspection | core types, persona loader |
 | `src/cli/commands/build-mcp.ts` | CLI command for manual Tier 2 build | tier2-generator |
@@ -537,7 +537,7 @@ These components are proven and require zero modifications:
 
 4. **Existing CI/CD**: The validation workflow continues to work. A new CI step for tier validation is additive.
 
-5. **Existing ST Factory integration**: The learning adapter continues to work. The Headmaster reads from ST Factory but does not write to it.
+5. **Existing ST Records integration**: The learning adapter continues to work. The Headmaster reads from ST Records but does not write to it.
 
 ### 5.5 Phased Migration Plan
 
@@ -555,7 +555,7 @@ Phase 15: Headmaster Core
   15.1  Create graduation-engine.ts
   15.2  Create headmaster/index.ts orchestrator
   15.3  Create persona-academy headmaster CLI commands
-  15.4  Integrate ST Factory reader for metrics
+  15.4  Integrate ST Records reader for metrics
   15.5  Create outputs/headmaster_runs/ logging
   15.6  Tests for graduation evaluation
 
@@ -657,7 +657,7 @@ agent-persona-academy/
 |   |       |-- tier1-dispatcher.test.ts
 |   |
 |   |-- readers/                          # NEW MODULE
-|   |   |-- stfactory-reader.ts           # Read ST Factory metrics via SQLite
+|   |   |-- stfactory-reader.ts           # Read ST Records metrics via SQLite
 |   |   |-- metroplex-reader.ts           # Read Metroplex build status
 |   |   |-- index.ts
 |   |   |-- __tests__/
@@ -743,7 +743,7 @@ agent-persona-academy/
 
               External (read-only access via src/readers/)
      ┌───────────────┐  ┌───────────────┐
-     | ST Factory DB |  | Metroplex DB  |
+     | ST Records DB |  | Metroplex DB  |
      | (metrics)     |  | (build status)|
      └───────────────┘  └───────────────┘
 ```
@@ -752,18 +752,18 @@ agent-persona-academy/
 
 ## 7. Integration Contracts
 
-### 7.1 Academy -> ST Factory (Read-Only)
+### 7.1 Academy -> ST Records (Read-Only)
 
-The Academy reads from ST Factory's SQLite database at `/home/apexaipc/projects/st-factory/data/persona_metrics.db` using a new `src/readers/stfactory-reader.ts` module. This mirrors what Metroplex already does (`readers/stfactory_reader.py`) but in TypeScript with `better-sqlite3`.
+The Academy reads from ST Records's SQLite database at `/home/apexaipc/projects/st-records/data/persona_metrics.db` using a new `src/readers/stfactory-reader.ts` module. This mirrors what Metroplex already does (`readers/stfactory_reader.py`) but in TypeScript with `better-sqlite3`.
 
 Tables read:
 - `outcome_records`: persona performance outcomes (fidelity scores, build results)
 - `improvement_recommendations`: pending recommendations (for new agent concept intake)
 - `persona_patches`: patch history (for graduation progress tracking)
 
-The Academy NEVER writes to ST Factory. The feedback loop is:
+The Academy NEVER writes to ST Records. The feedback loop is:
 ```
-Academy (persona definition) -> YCE Harness (build) -> ST Factory (metrics) -> Academy (read metrics for graduation)
+Academy (persona definition) -> YCE Harness (build) -> ST Records (metrics) -> Academy (read metrics for graduation)
 ```
 
 ### 7.2 Academy -> Metroplex (Write to Priority Queue)
@@ -791,13 +791,13 @@ No direct integration. The Academy's Tier 1 builds flow through Metroplex's exis
 
 The YCE Harness `agents/yaml_loader.py` already knows how to read `agent_config` from persona YAML files. This is the runtime loading path for Tier 1 agents. The build path produces the project; the YAML loader provides the agent definition at runtime.
 
-### 7.4 Sky-Lynx -> Academy (via ST Factory Contracts)
+### 7.4 Sky-Lynx -> Academy (via ST Records Contracts)
 
-Unchanged. Sky-Lynx writes `ImprovementRecommendation` contracts to ST Factory. The Academy's learning adapter (`src/departments/learning-adapter.ts`) reads and evaluates them against department policies. The Headmaster adds a new intake path: recommendations with `target_system = 'new_agent'` trigger Tier Assignment instead of being processed as persona patches.
+Unchanged. Sky-Lynx writes `ImprovementRecommendation` contracts to ST Records. The Academy's learning adapter (`src/departments/learning-adapter.ts`) reads and evaluates them against department policies. The Headmaster adds a new intake path: recommendations with `target_system = 'new_agent'` trigger Tier Assignment instead of being processed as persona patches.
 
 ### 7.5 Metroplex PatchGate -> Academy (via Git)
 
-Unchanged. Metroplex PatchGate reads proposed patches from ST Factory, clones the Academy repo, applies YAML patches, and pushes via git. This workflow is unaffected by the tiering system because patches target `persona.yaml` files, not `tier.yaml` files. Tier transitions are managed by the Headmaster, not by patches.
+Unchanged. Metroplex PatchGate reads proposed patches from ST Records, clones the Academy repo, applies YAML patches, and pushes via git. This workflow is unaffected by the tiering system because patches target `persona.yaml` files, not `tier.yaml` files. Tier transitions are managed by the Headmaster, not by patches.
 
 ---
 
@@ -817,8 +817,8 @@ Unchanged. Metroplex PatchGate reads proposed patches from ST Factory, clones th
    c. Deployed to cloud (Railway, etc.)
    Recommendation: Option (a) for initial builds, then (c) via Metroplex PublishGate for production.
 
-3. **Graduation metrics source**: ST Factory currently tracks outcome records at the idea/build level, not at the persona level. Per-persona metrics would require:
-   a. A new `persona_outcomes` table in ST Factory
+3. **Graduation metrics source**: ST Records currently tracks outcome records at the idea/build level, not at the persona level. Per-persona metrics would require:
+   a. A new `persona_outcomes` table in ST Records
    b. Tagging existing outcome_records with the persona that produced them
    Recommendation: Option (b) -- add `persona_id` column to outcome_records.
 
@@ -830,7 +830,7 @@ Unchanged. Metroplex PatchGate reads proposed patches from ST Factory, clones th
 |------|--------|------------|
 | Tier 2 codegen produces broken MCP servers | Tier 2 builds fail silently | Schema validation + `npm run build` + `npm test` in generated server |
 | Headmaster promotes too aggressively | Resources wasted on premature Tier 1 builds | Conservative graduation criteria (5+ consecutive passing evaluations) |
-| ST Factory DB schema changes break reader | Headmaster crashes on stale schema | Version check on reader init, graceful degradation to Tier 3 defaults |
+| ST Records DB schema changes break reader | Headmaster crashes on stale schema | Version check on reader init, graceful degradation to Tier 3 defaults |
 | Metroplex priority queue contention | Academy builds compete with IdeaForge builds | Academy uses lower priority weight (0.8) vs IdeaForge (1.0) |
 | Persona YAML backward compatibility | Old personas fail new validation | All new fields optional, Headmaster bootstraps defaults |
 | Tier 1 builds are expensive (Claude API costs) | Budget overrun | max_tier1_builds_per_day config in Headmaster |
@@ -839,7 +839,7 @@ Unchanged. Metroplex PatchGate reads proposed patches from ST Factory, clones th
 
 - **Multi-model agent support**: Tier 1 agents use Claude only (Anthropic Agent SDK). Other LLMs are out of scope.
 - **Agent-to-agent communication**: Tier 1 agents do not communicate with each other. Orchestration is via YCE Harness's existing orchestrator pattern.
-- **Real-time monitoring dashboard**: Monitoring is via ST Factory dashboard and EAC Command Center. No new UI.
+- **Real-time monitoring dashboard**: Monitoring is via ST Records dashboard and EAC Command Center. No new UI.
 - **Automatic demotion**: Demotion requires manual confirmation or Headmaster CLI command. Automatic demotion is deferred to avoid oscillation.
 
 ---
@@ -859,19 +859,19 @@ All paths are absolute from `/home/apexaipc/projects/`.
 - CLI entry: `agent-persona-academy/src/cli/index.ts`
 - Schema: `agent-persona-academy/schema/persona-schema.json`, `schema/department-schema.json`
 
-### ST Factory (Python, Pydantic)
-- ContractStore: `st-factory/contracts/store.py` -- dual-write JSONL + SQLite
-- ImprovementRecommendation: `st-factory/contracts/improvement_recommendation.py`
-- PersonaUpgradePatch: `st-factory/contracts/persona_upgrade_patch.py`
-- OutcomeRecord: `st-factory/contracts/outcome_record.py`
-- DB: `st-factory/data/persona_metrics.db`
+### ST Records (Python, Pydantic)
+- ContractStore: `st-records/contracts/store.py` -- dual-write JSONL + SQLite
+- ImprovementRecommendation: `st-records/contracts/improvement_recommendation.py`
+- PersonaUpgradePatch: `st-records/contracts/persona_upgrade_patch.py`
+- OutcomeRecord: `st-records/contracts/outcome_record.py`
+- DB: `st-records/data/persona_metrics.db`
 
 ### Metroplex (Python)
 - Config: `metroplex/config.py` -- `academy_repo`, `stfactory_db`, `yce_dir`
 - Orchestrator: `metroplex/orchestrator.py` -- `CycleOrchestrator.run_cycle()`
 - Build gate: `metroplex/gates/build.py` -- `BuildOrchestrator.run_from_queue()`, `buildable_sources` on line 610
 - Patch gate: `metroplex/gates/patcher.py` -- `PatchGate.run()`
-- ST Factory reader: `metroplex/readers/stfactory_reader.py`
+- ST Records reader: `metroplex/readers/stfactory_reader.py`
 
 ### YCE Harness (Python, Claude Agent SDK)
 - Agent definitions: `yce-harness/agents/definitions.py` -- `AgentDefinition`, `AGENT_DEFINITIONS`

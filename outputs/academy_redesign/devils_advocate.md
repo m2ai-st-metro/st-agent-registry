@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The proposed redesign layers significant new automation on top of a foundation that is largely unproven at runtime. The Academy is a well-built YAML definition system with 10 personas, but those personas have near-zero operational consumption today. The supporting ecosystem (ST Factory, Metroplex, Sky-Lynx) has real infrastructure but extremely thin data -- 2 outcome records, 2 persona patches (both skipped 3,412 times by Metroplex), and 8 improvement recommendations (3 of which are dry-run stubs). Building a Headmaster to automate tiering decisions when there is no history of manual tiering decisions to learn from is building a control system for a process that does not yet exist.
+The proposed redesign layers significant new automation on top of a foundation that is largely unproven at runtime. The Academy is a well-built YAML definition system with 10 personas, but those personas have near-zero operational consumption today. The supporting ecosystem (ST Records, Metroplex, Sky-Lynx) has real infrastructure but extremely thin data -- 2 outcome records, 2 persona patches (both skipped 3,412 times by Metroplex), and 8 improvement recommendations (3 of which are dry-run stubs). Building a Headmaster to automate tiering decisions when there is no history of manual tiering decisions to learn from is building a control system for a process that does not yet exist.
 
 **Recommendation: TRIM** -- build a minimal Tier 1 agent from an existing persona using the YAML loader that already exists in yce-harness, prove it works end-to-end with a real use case, then decide if automation is warranted.
 
@@ -58,7 +58,7 @@ Drop Tier 2. Define two modes: **Persona** (YAML -> system prompt, current behav
 ### What I Found
 
 The Headmaster concept proposes an agentic process that:
-1. Reads ST Factory metrics
+1. Reads ST Records metrics
 2. Reads Sky-Lynx recommendations
 3. Decides when to promote/demote personas between tiers
 4. Executes the promotion (builds agent code, configures MCP servers)
@@ -69,7 +69,7 @@ The Headmaster concept proposes an agentic process that:
 
 **Problem 2: Irreversibility risk.** Promoting a persona from Tier 3 to Tier 1 means generating agent code, prompt files, tool configurations, and potentially MCP server boilerplate. If the promotion is wrong (agent performs poorly), rollback requires understanding and reverting generated artifacts. There's no rollback mechanism proposed.
 
-**Problem 3: ST Factory metrics are too thin to drive decisions.** The data:
+**Problem 3: ST Records metrics are too thin to drive decisions.** The data:
 - 2 outcome records total (1 published, 1 deferred)
 - 8 improvement recommendations (3 are dry-run stubs with "Example recommendation")
 - 2 persona patches (both repeatedly skipped by Metroplex -- 3,412 skip records)
@@ -136,7 +136,7 @@ Before designing the v2 architecture, validate the existing bridge: set `LOAD_AG
 1. **Academy YAML schema** -- mature, validated, 10 personas, CI/CD pipeline
 2. **`agent_config` field in PersonaDefinition** -- already defined in `types.ts`, already used by `code-reviewer` persona
 3. **`yaml_loader.py` in yce-harness** -- loads persona YAML, produces `AgentDefinition` objects, resolves tool groups, model selection with env var overrides
-4. **Metroplex patcher (Gate 3)** -- reads patches from ST Factory, applies YAML modifications to Academy repo via git
+4. **Metroplex patcher (Gate 3)** -- reads patches from ST Records, applies YAML modifications to Academy repo via git
 5. **yce-harness build orchestrator** -- dispatches to Claude Agent SDK, manages parallel workers
 
 ### What's Missing vs. What the Redesign Proposes
@@ -156,7 +156,7 @@ Before designing the v2 architecture, validate the existing bridge: set `LOAD_AG
 
 1. Wire `yaml_loader.py` into yce-harness client initialization (currently dead code)
 2. Add more `agent_config` sections to personas that warrant agent behavior
-3. Use existing Metroplex + ST Factory pipeline for patches
+3. Use existing Metroplex + ST Records pipeline for patches
 
 The redesign proposes building new coordination layers when the existing layers have not been connected yet.
 
@@ -191,7 +191,7 @@ Everything above plus:
 - Headmaster orchestrator (automated tiering)
 - Tier 2 MCP server generation
 - Promotion/demotion state machine
-- ST Factory metrics integration for tiering decisions
+- ST Records metrics integration for tiering decisions
 - Dashboard showing persona tiers and transition history
 - Automated agent test suite (beyond fidelity -- behavioral testing)
 
@@ -220,7 +220,7 @@ This is a valid problem, but it's a workflow optimization problem, not a capabil
 We don't like that:
 1. The persona YAMLs are beautifully defined but mostly unused at runtime
 2. The yaml_loader.py bridge exists but is dead code
-3. The ST Factory data loop (Sky-Lynx -> recommendations -> patches -> Academy) has never successfully applied a single patch
+3. The ST Records data loop (Sky-Lynx -> recommendations -> patches -> Academy) has never successfully applied a single patch
 
 These are real problems, but they're connectivity problems, not architectural problems. The redesign proposes new architecture when the fix is plugging existing pieces together.
 
@@ -232,7 +232,7 @@ This is 30% real problem (disconnected systems) and 70% aesthetic problem (desir
 
 ## Investigation 7: Reality Check -- Is the Ecosystem Ready?
 
-### ST Factory Metrics DB
+### ST Records Metrics DB
 
 | Table | Records | Status |
 |-------|---------|--------|
@@ -254,7 +254,7 @@ This is 30% real problem (disconnected systems) and 70% aesthetic problem (desir
 | Patches applied | 0 | ZERO -- all 3,412 attempts skipped |
 | Skip reason | "no operations in patch" | Patch format mismatch |
 
-**Assessment**: Metroplex is a real, running production system. Its build pipeline works (31 completed builds, 6 published). But its patch pipeline is completely broken -- 3,412 consecutive failures with the same error ("no operations in patch"). The patches from ST Factory are being read but their operations aren't being extracted correctly. This is a bug, not a design issue, but it means the Academy feedback loop has never closed.
+**Assessment**: Metroplex is a real, running production system. Its build pipeline works (31 completed builds, 6 published). But its patch pipeline is completely broken -- 3,412 consecutive failures with the same error ("no operations in patch"). The patches from ST Records are being read but their operations aren't being extracted correctly. This is a bug, not a design issue, but it means the Academy feedback loop has never closed.
 
 ### Sky-Lynx
 
@@ -279,14 +279,14 @@ This is 30% real problem (disconnected systems) and 70% aesthetic problem (desir
 
 ### Verdict
 
-The ecosystem is half-built. Research signals flow. Builds work. But the feedback loop from Sky-Lynx through ST Factory through Metroplex back to Academy has never completed. Specifically:
+The ecosystem is half-built. Research signals flow. Builds work. But the feedback loop from Sky-Lynx through ST Records through Metroplex back to Academy has never completed. Specifically:
 
-1. The patch format between ST Factory and Metroplex is broken (3,412 skips)
+1. The patch format between ST Records and Metroplex is broken (3,412 skips)
 2. The yaml_loader bridge is dead code
 3. Only 1 of 10 personas has agent_config
 
 **Layering a Headmaster on top of this is premature.** Fix the existing pipeline first:
-- Fix the Metroplex patcher to correctly extract operations from ST Factory patches
+- Fix the Metroplex patcher to correctly extract operations from ST Records patches
 - Wire yaml_loader.py into yce-harness
 - Add agent_config to more personas
 - Close one complete feedback loop cycle
@@ -313,7 +313,7 @@ The ecosystem is half-built. Research signals flow. Builds work. But the feedbac
 Instead, execute this phased approach:
 
 ### Phase 0: Fix What's Broken (1-2 days)
-- Fix the Metroplex patcher bug ("no operations in patch") so the ST Factory -> Academy feedback loop can close
+- Fix the Metroplex patcher bug ("no operations in patch") so the ST Records -> Academy feedback loop can close
 - This is blocking everything downstream and has been broken for weeks
 
 ### Phase 1: Prove the Bridge (1 week)
@@ -329,7 +329,7 @@ Instead, execute this phased approach:
 ### Phase 3: Evaluate (after 4-6 weeks of operation)
 - How many personas actually needed agent promotion?
 - Did the manual process bottleneck anything?
-- Is there enough data in ST Factory to justify automated tiering?
+- Is there enough data in ST Records to justify automated tiering?
 - Only THEN consider building a Headmaster
 
 ### What Gets Cut

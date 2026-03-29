@@ -14,7 +14,7 @@
 2. [Headmaster -> Metroplex: Build Request Submission](#2-headmaster---metroplex-build-request-submission)
 3. [Metroplex -> YCE Harness: Agent Build Dispatch](#3-metroplex---yce-harness-agent-build-dispatch)
 4. [Sky-Lynx -> Academy: Improvement Recommendations](#4-sky-lynx---academy-improvement-recommendations)
-5. [ST Factory -> Headmaster: Metrics for Promotion/Demotion](#5-st-factory---headmaster-metrics-for-promotiondemotion)
+5. [ST Records -> Headmaster: Metrics for Promotion/Demotion](#5-st-records---headmaster-metrics-for-promotiondemotion)
 6. [Academy -> GitHub Registry: Graduated Agent Publishing](#6-academy---github-registry-graduated-agent-publishing)
 7. [Full Lifecycle Sequence Diagram](#7-full-lifecycle-sequence-diagram)
 8. [Interface Gap Analysis](#8-interface-gap-analysis)
@@ -34,8 +34,8 @@
 - **Key type**: `PersonaDefinition` in `src/core/types.ts` (lines 289-310)
 - **Agent config**: Optional `agent_config` section with `description`, `prompt_file`, `model` (haiku|sonnet|opus|inherit), and `tools` (groups/additional/exclude)
 
-### ST Factory
-- **Location**: `/home/apexaipc/projects/st-factory/`
+### ST Records
+- **Location**: `/home/apexaipc/projects/st-records/`
 - **Database**: `data/persona_metrics.db` (SQLite)
 - **Tables**: `outcome_records`, `improvement_recommendations`, `persona_patches`, `research_signals`
 - **Contract store**: `contracts/store.py` -- `ContractStore` class, dual-writes JSONL + SQLite
@@ -52,7 +52,7 @@
 - **Gates**:
   - Gate 1 (Triage): `gates/triage.py` -- reads IdeaForge, scores, enqueues to priority queue
   - Gate 2 (Build): `gates/build.py` -- generates specs, dispatches YCE Harness builds
-  - Gate 3 (Patch): `gates/patcher.py` -- reads proposed patches from ST Factory, applies to Academy repo
+  - Gate 3 (Patch): `gates/patcher.py` -- reads proposed patches from ST Records, applies to Academy repo
   - Gate 4 (Publish): `gates/publish.py` -- pushes completed builds to GitHub
 - **Priority queue model**: `PriorityItem` -- `source` is `Literal["ideaforge", "skylynx", "linear"]`
 - **Spec templates**: `spec_templates/app_spec_template.md` -- Jinja2 with `artifact_type` branching (tool|agent|product)
@@ -75,7 +75,7 @@
 
 ### Sky-Lynx
 - **Remote**: `m2ai-portfolio/sky-lynx`
-- **Function**: Weekly analysis of usage insights, generates `ImprovementRecommendation` records in ST Factory
+- **Function**: Weekly analysis of usage insights, generates `ImprovementRecommendation` records in ST Records
 - **Output**: Recommendations with `RecommendationType` enum and `TargetScope` (specific_persona, all_personas, all_in_department)
 
 ---
@@ -265,8 +265,8 @@ The YCE Harness itself needs NO modification. The spec template is the control s
 
 1. Sky-Lynx runs weekly analysis of Claude Code usage insights
 2. Generates `ImprovementRecommendation` records via `ContractStore.write_recommendation()`
-3. Records land in ST Factory's `improvement_recommendations` table
-4. `persona_upgrader.py` (`st-factory/scripts/`) consumes recommendations where `target_system = "persona"`
+3. Records land in ST Records's `improvement_recommendations` table
+4. `persona_upgrader.py` (`st-records/scripts/`) consumes recommendations where `target_system = "persona"`
 5. Calls Claude to generate `PersonaUpgradePatch` records
 6. Patches stored in `persona_patches` table with status='proposed'
 7. Metroplex Gate 3 (`gates/patcher.py`) reads proposed patches and applies to Academy repo
@@ -347,18 +347,18 @@ The patcher currently assumes `personas/{persona_id}.yaml` (line 183). The actua
 
 | Change | File | Project | Impact |
 |--------|------|---------|--------|
-| Add `tier_context` to PersonaUpgradePatch | `contracts/persona_upgrade_patch.py` | ST Factory | LOW -- optional field |
-| Add TIER_PROMOTION/DEMOTION/AGENT_CONFIG types | `contracts/improvement_recommendation.py` | ST Factory | LOW -- enum extension |
+| Add `tier_context` to PersonaUpgradePatch | `contracts/persona_upgrade_patch.py` | ST Records | LOW -- optional field |
+| Add TIER_PROMOTION/DEMOTION/AGENT_CONFIG types | `contracts/improvement_recommendation.py` | ST Records | LOW -- enum extension |
 | Fix target path to `personas/{id}/persona.yaml` | `gates/patcher.py:183` | Metroplex | BUG FIX |
 | Handle tier_promotion patches as build requests | `gates/patcher.py` | Metroplex | MEDIUM -- new logic branch |
 
 ---
 
-## 5. ST Factory -> Headmaster: Metrics for Promotion/Demotion
+## 5. ST Records -> Headmaster: Metrics for Promotion/Demotion
 
-### Available Data in ST Factory
+### Available Data in ST Records
 
-The Headmaster needs to make tier decisions. Here is what it can read from ST Factory's `persona_metrics.db`:
+The Headmaster needs to make tier decisions. Here is what it can read from ST Records's `persona_metrics.db`:
 
 #### Table: `outcome_records`
 Pipeline terminal results. Shows whether builds using a persona succeeded or failed.
@@ -436,7 +436,7 @@ The Headmaster should evaluate personas on these dimensions:
 
 ```python
 # Headmaster reads these databases in read-only mode:
-# 1. ST Factory DB: /home/apexaipc/projects/st-factory/data/persona_metrics.db
+# 1. ST Records DB: /home/apexaipc/projects/st-records/data/persona_metrics.db
 # 2. Metroplex DB: /home/apexaipc/projects/metroplex/data/metroplex.db
 # 3. Academy personas: /home/apexaipc/projects/agent-persona-academy/personas/
 
@@ -486,7 +486,7 @@ def get_persona_health(persona_id: str) -> dict:
 - `outcome_records`: Updated when ideas reach terminal states
 - Academy validation: Run on-demand via `npm run cli test` or `npm run cli report`
 
-### Changes Required to ST Factory
+### Changes Required to ST Records
 
 | Change | File | Type | Impact |
 |--------|------|------|--------|
@@ -495,7 +495,7 @@ def get_persona_health(persona_id: str) -> dict:
 
 The Headmaster DOES need somewhere to store tier state. Options:
 1. **In Academy repo**: Add `tier.yaml` alongside `persona.yaml` in each persona directory (git-tracked, auditable)
-2. **In ST Factory DB**: New `tier_history` table (centralized, queryable)
+2. **In ST Records DB**: New `tier_history` table (centralized, queryable)
 3. **In Headmaster's own DB**: Separate SQLite (isolated)
 
 **Recommendation**: Use option 1 (tier.yaml in Academy repo) for current state, with option 2 for history logging. This keeps the source of truth in git while maintaining query access.
@@ -728,7 +728,7 @@ Registry index regenerated (either manually or via CI)
 | Headmaster -> Metroplex queue | Academy -> Metroplex | Submit tier promotion builds | SMALL -- write PriorityItem |
 | Tier-specific spec templates | Metroplex -> YCE | Tier 1/2 build instructions | MEDIUM -- 2 new templates |
 | Tier metadata in persona dirs | Headmaster -> Academy repo | Track current tier per persona | SMALL -- tier.yaml files |
-| Headmaster metrics reader | ST Factory -> Headmaster | Aggregate persona health | SMALL -- read-only queries |
+| Headmaster metrics reader | ST Records -> Headmaster | Aggregate persona health | SMALL -- read-only queries |
 | Tier-aware patch handling | Metroplex Gate 3 | Detect promotion patches | MEDIUM -- new branch in patcher |
 
 ### Interfaces That Need Modification (MINIMIZE THESE)
@@ -738,8 +738,8 @@ Registry index regenerated (either manually or via CI)
 | `PriorityItem.source` enum | Metroplex | Add "academy" | Required to distinguish build source |
 | `buildable_sources` tuple | Metroplex | Add "academy" | Required for Gate 2 to pick up academy items |
 | `patcher.py` target path | Metroplex | Fix `personas/{id}.yaml` -> `personas/{id}/persona.yaml` | Existing bug fix |
-| `RecommendationType` enum | ST Factory | Add tier_promotion/demotion types | Enables Sky-Lynx to recommend tier changes |
-| `PersonaUpgradePatch` | ST Factory | Add optional tier_context field | Backward compatible |
+| `RecommendationType` enum | ST Records | Add tier_promotion/demotion types | Enables Sky-Lynx to recommend tier changes |
+| `PersonaUpgradePatch` | ST Records | Add optional tier_context field | Backward compatible |
 | `RegistryEntry` type | Academy | Add tier, buildRepo fields | Backward compatible |
 
 ---
@@ -751,7 +751,7 @@ Registry index regenerated (either manually or via CI)
 | Modified System | Files Changed | Breaking? | Rollback Difficulty |
 |----------------|---------------|-----------|---------------------|
 | Metroplex | 3 files (models.py, build.py, patcher.py) | No -- additive + bugfix | Easy -- revert 3 files |
-| ST Factory | 2 files (improvement_recommendation.py, persona_upgrade_patch.py) | No -- additive enums + optional field | Easy -- revert 2 files |
+| ST Records | 2 files (improvement_recommendation.py, persona_upgrade_patch.py) | No -- additive enums + optional field | Easy -- revert 2 files |
 | Academy | 1 file (registry/types.ts) | No -- additive fields | Easy -- revert 1 file |
 | YCE Harness | 0 files | N/A | N/A |
 | IdeaForge | 0 files | N/A | N/A |
@@ -760,7 +760,7 @@ Registry index regenerated (either manually or via CI)
 ### Dependency Order for Implementation
 
 ```
-Phase 1: ST Factory contract extensions (no downstream impact)
+Phase 1: ST Records contract extensions (no downstream impact)
     - Add RecommendationType enum values
     - Add tier_context to PersonaUpgradePatch
     - Regenerate JSON schemas
@@ -777,7 +777,7 @@ Phase 3: Academy extensions
     - Create Headmaster process skeleton
 
 Phase 4: Headmaster implementation
-    - Metrics aggregation from ST Factory
+    - Metrics aggregation from ST Records
     - Promotion/demotion decision logic
     - PriorityItem submission to Metroplex
     - tier.yaml management
@@ -798,12 +798,12 @@ Phase 5: Integration testing
 | `/home/apexaipc/projects/agent-persona-academy/src/core/types.ts` | Academy | TypeScript types for all persona structures |
 | `/home/apexaipc/projects/agent-persona-academy/src/registry/types.ts` | Academy | Registry entry types (needs tier extension) |
 | `/home/apexaipc/projects/agent-persona-academy/src/unified-server/tools.ts` | Academy | MCP tool definitions (pattern for Tier 2 builds) |
-| `/home/apexaipc/projects/st-factory/contracts/store.py` | ST Factory | ContractStore -- Headmaster reads this |
-| `/home/apexaipc/projects/st-factory/contracts/improvement_recommendation.py` | ST Factory | Sky-Lynx recommendation format (needs tier types) |
-| `/home/apexaipc/projects/st-factory/contracts/persona_upgrade_patch.py` | ST Factory | Patch format (needs tier_context) |
-| `/home/apexaipc/projects/st-factory/schemas/persona_upgrade_patch.v1.json` | ST Factory | Patch JSON schema |
-| `/home/apexaipc/projects/st-factory/schemas/improvement_recommendation.v1.json` | ST Factory | Recommendation JSON schema |
-| `/home/apexaipc/projects/st-factory/scripts/persona_upgrader.py` | ST Factory | Consumes recommendations, generates patches |
+| `/home/apexaipc/projects/st-records/contracts/store.py` | ST Records | ContractStore -- Headmaster reads this |
+| `/home/apexaipc/projects/st-records/contracts/improvement_recommendation.py` | ST Records | Sky-Lynx recommendation format (needs tier types) |
+| `/home/apexaipc/projects/st-records/contracts/persona_upgrade_patch.py` | ST Records | Patch format (needs tier_context) |
+| `/home/apexaipc/projects/st-records/schemas/persona_upgrade_patch.v1.json` | ST Records | Patch JSON schema |
+| `/home/apexaipc/projects/st-records/schemas/improvement_recommendation.v1.json` | ST Records | Recommendation JSON schema |
+| `/home/apexaipc/projects/st-records/scripts/persona_upgrader.py` | ST Records | Consumes recommendations, generates patches |
 | `/home/apexaipc/projects/metroplex/models.py` | Metroplex | PriorityItem model (needs "academy" source) |
 | `/home/apexaipc/projects/metroplex/config.py` | Metroplex | academy_repo config, threshold settings |
 | `/home/apexaipc/projects/metroplex/gates/triage.py` | Metroplex | Gate 1 -- not used by Headmaster (bypass) |
@@ -846,7 +846,7 @@ This needs to be fixed regardless of Academy v2.
 Academy v2 Headmaster - Tier Management Process
 
 Runs periodically (e.g., daily via cron or as part of Metroplex cycle).
-Reads metrics from ST Factory and Academy, makes promotion/demotion decisions,
+Reads metrics from ST Records and Academy, makes promotion/demotion decisions,
 and submits build requests to Metroplex when promotions are approved.
 """
 
@@ -860,7 +860,7 @@ from datetime import datetime
 # Paths
 ACADEMY_PATH = Path.home() / "projects" / "agent-persona-academy"
 PERSONAS_PATH = ACADEMY_PATH / "personas"
-STF_DB = Path.home() / "projects" / "st-factory" / "data" / "persona_metrics.db"
+STF_DB = Path.home() / "projects" / "st-records" / "data" / "persona_metrics.db"
 METROPLEX_DB = Path.home() / "projects" / "metroplex" / "data" / "metroplex.db"
 
 # Thresholds
@@ -896,7 +896,7 @@ class Headmaster:
         return 0.0
 
     def get_patch_metrics(self, persona_id: str) -> dict:
-        """Query ST Factory for patch history."""
+        """Query ST Records for patch history."""
         row = self.stf_conn.execute("""
             SELECT COUNT(*) as total,
                    SUM(CASE WHEN status='applied' THEN 1 ELSE 0 END) as applied,

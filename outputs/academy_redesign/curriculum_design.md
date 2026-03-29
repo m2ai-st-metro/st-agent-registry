@@ -150,7 +150,7 @@ All Tier 3 and Tier 2 gates pass, PLUS:
 | **G1.6** Performance Benchmarks | Agent completes reference tasks within: time budget, token budget, cost budget | Per-agent SLOs defined and met | Benchmark suite | Yes |
 | **G1.7** Rollback Capability | Agent's actions can be undone: git revert for code changes, idempotent for data writes | Rollback tested for top 3 action types | Rollback test suite | Partially |
 | **G1.8** Observability | Agent emits: structured logs, token usage, action trace, outcome records | All four present in test run output | Log validation | Yes |
-| **G1.9** Outcome Recording | Agent writes `OutcomeRecord` to ST Factory on task completion | Record matches `OutcomeRecord` contract schema | Contract validation | Yes |
+| **G1.9** Outcome Recording | Agent writes `OutcomeRecord` to ST Records on task completion | Record matches `OutcomeRecord` contract schema | Contract validation | Yes |
 | **G1.10** Confinement Test | Agent cannot escape its defined tool set or access resources outside its boundary | 0 boundary violations in adversarial test | Sandbox test suite | Partially |
 | **G1.11** Production Burn-In | Agent runs on real tasks in shadow mode (output compared to human, not applied) for defined period | >= 5 shadow runs with >= 80% output quality | **Manual (HIL gate)** | No |
 
@@ -168,7 +168,7 @@ Promotion is the upgrade of an agent from a lower tier to a higher one. It is tr
 
 | Condition | Metric | Threshold | Data Source |
 |-----------|--------|-----------|-------------|
-| **P3-2.1** Usage Frequency | Agent is invoked N+ times in trailing 30 days | >= 50 invocations | ST Factory `outcome_records` or future usage table |
+| **P3-2.1** Usage Frequency | Agent is invoked N+ times in trailing 30 days | >= 50 invocations | ST Records `outcome_records` or future usage table |
 | **P3-2.2** Tool Demand Signal | Users request tool-like behavior that the persona cannot provide (e.g., "run this analysis on my data") | >= 3 distinct tool requests identified | Sky-Lynx recommendation with `recommendation_type = "pipeline_change"` |
 | **P3-2.3** Fidelity Stability | Fidelity score has been stable (no regressions) across last 3 evaluation cycles | Score variance < 5 points | Quality report history |
 | **P3-2.4** Sky-Lynx Recommendation | Sky-Lynx explicitly recommends promotion | `ImprovementRecommendation` with type containing "tier_promotion" or "tool_addition" and `signal_strength >= 0.7` | `improvement_recommendations` table |
@@ -188,13 +188,13 @@ Promotion is the upgrade of an agent from a lower tier to a higher one. It is tr
 
 | Condition | Metric | Threshold | Data Source |
 |-----------|--------|-----------|-------------|
-| **P2-1.1** Usage Frequency | Tool calls in trailing 30 days | >= 100 tool calls | ST Factory usage tracking |
+| **P2-1.1** Usage Frequency | Tool calls in trailing 30 days | >= 100 tool calls | ST Records usage tracking |
 | **P2-1.2** Autonomy Demand | Users request autonomous behavior: scheduled runs, event-driven triggers, unsolicited analysis | >= 5 distinct autonomy requests | Sky-Lynx recommendations |
 | **P2-1.3** Success Rate | Tool calls completing without error | >= 95% success rate | Outcome records |
 | **P2-1.4** Delegation Need | Agent's tasks require coordinating with other agents or systems | >= 3 identified delegation patterns | Sky-Lynx analysis |
 | **P2-1.5** Safety Profile Clear | Zero safety incidents in trailing 90 days | 0 incidents | Incident log (new table) |
 | **P2-1.6** Sky-Lynx Recommendation | Explicit promotion recommendation | `signal_strength >= 0.8` | `improvement_recommendations` |
-| **P2-1.7** Human Approval | Matthew (or designated human) explicitly approves the promotion | Signed off in ST Factory | **Manual (HIL gate)** |
+| **P2-1.7** Human Approval | Matthew (or designated human) explicitly approves the promotion | Signed off in ST Records | **Manual (HIL gate)** |
 
 **Promotion process**:
 
@@ -255,7 +255,7 @@ These trigger demotion when thresholds are breached over a rolling window:
 
 ## 5. Best Practices Injection
 
-How Sky-Lynx insights and ST Factory metrics get baked into agents at graduation time as living configuration.
+How Sky-Lynx insights and ST Records metrics get baked into agents at graduation time as living configuration.
 
 ### 5.1 Injection Points
 
@@ -429,7 +429,7 @@ interface Syllabus {
 
 ## 7. Data Model Extensions
 
-The existing ST Factory schema needs these additions to support the curriculum system.
+The existing ST Records schema needs these additions to support the curriculum system.
 
 ### 7.1 New Tables
 
@@ -553,7 +553,7 @@ Recommended phased implementation, designed so each phase delivers value indepen
 ### Phase A: Foundation (Week 1-2)
 
 1. Add `tier` section to `PersonaDefinition` types and JSON schema
-2. Add `agent_tiers` and `graduation_gates` tables to ST Factory
+2. Add `agent_tiers` and `graduation_gates` tables to ST Records
 3. Implement Tier 3 graduation gate runner (wraps existing validation tools)
 4. Add `persona-academy graduate <id>` CLI command
 5. Run graduation on all 10 existing personas to establish baselines
@@ -562,7 +562,7 @@ Recommended phased implementation, designed so each phase delivers value indepen
 
 ### Phase B: Syllabus Engine (Week 3-4)
 
-1. Add `syllabus_progress` table to ST Factory
+1. Add `syllabus_progress` table to ST Records
 2. Implement syllabus evaluation for Tier 3 (wraps test runner)
 3. Add `persona-academy syllabus <id>` CLI command showing module status
 4. Define reference test prompts for each Tier 3 module (5 diverse prompts per persona)
@@ -572,7 +572,7 @@ Recommended phased implementation, designed so each phase delivers value indepen
 ### Phase C: Promotion/Demotion Logic (Week 5-6)
 
 1. Add `invocation_log` and `safety_incidents` tables
-2. Implement promotion condition checker (reads from ST Factory data)
+2. Implement promotion condition checker (reads from ST Records data)
 3. Implement demotion trigger detector (reads from incident and invocation logs)
 4. Add `persona-academy status <id>` showing promotion eligibility and demotion risk
 5. Wire promotion/demotion events into `PersonaUpgradePatch` flow
