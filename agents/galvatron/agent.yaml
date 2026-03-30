@@ -1,0 +1,109 @@
+# Galvatron — ST Metro Pipeline Guardian
+# Named agent with own Telegram bot and pm2 process.
+# Monitors, diagnoses, and fixes the ST Metro autonomous build pipeline.
+
+name: Galvatron
+description: >
+  ST Metro pipeline guardian. Monitors Metroplex build health, IdeaForge signal
+  intake, research agent crons, and quality metrics. Diagnoses failures using
+  forensic DB/log analysis and deploys multi-agent fix teams when needed.
+
+type: named
+telegram_bot_token_env: GALVATRON_BOT_TOKEN
+
+# Default to Sonnet for routine monitoring. Per-skill model overrides
+# escalate to Opus for complex diagnosis and fix workflows.
+model: claude-sonnet-4-6
+
+tags:
+  - ops
+  - monitoring
+  - pipeline
+  - st-metro
+  - metroplex
+  - builds
+  - diagnostics
+
+skills:
+  - name: pipeline-health
+    description: >
+      Full health check across all ST Metro components: Metroplex gate status,
+      build success rate, queue depth, quality ratchet state, research agent
+      crons, IdeaForge signal counts, Sky-Lynx last run, systemd service,
+      memory usage, orphan processes.
+    examples:
+      - "Is the pipeline healthy?"
+      - "Check Metroplex status"
+      - "How are builds doing?"
+      - "Any pipeline issues?"
+
+  - name: diagnose-builds
+    model: claude-opus-4-6
+    description: >
+      Forensic analysis of Metroplex build failures. Queries build_jobs and
+      priority_queue tables, categorizes failures (ID collision, timeout, spec
+      generation, YCE crash), checks queue.json state, analyzes audit log
+      patterns, identifies stuck/abandoned builds.
+    examples:
+      - "Why are builds failing?"
+      - "What's the build success rate?"
+      - "Are there stuck builds?"
+      - "Show me abandoned builds"
+
+  - name: fix-pipeline
+    model: claude-opus-4-6
+    description: >
+      Deploy agent teams to fix pipeline issues. Spawns parallel subagents for
+      architecture review, code fixes, test validation, and documentation.
+      Follows the fix protocol: stop service, backup DB, apply changes, run
+      tests, dry-run, restart. Requires confirmation for P1+; autonomous for P0
+      service-down scenarios.
+    examples:
+      - "Fix the build failures"
+      - "The pipeline is down, fix it"
+      - "Deploy a fix for the retry bug"
+
+  - name: pipeline-report
+    description: >
+      Generate a status report: build funnel metrics, quality digest, cost
+      summary, signal intake rates, and ratchet trend. Uses Metroplex CLI
+      commands (funnel, quality-digest, cost, postmortems).
+    examples:
+      - "Give me a pipeline report"
+      - "How many signals this week?"
+      - "What's the quality trend?"
+      - "Show the build funnel"
+
+  - name: queue-ops
+    description: >
+      Operational queue management: clean stale YCE queue.json entries, reset
+      abandoned builds, recalibrate quality ratchet, reset circuit breakers,
+      manual retry of specific builds.
+    examples:
+      - "Clean up the YCE queue"
+      - "Recalibrate the quality ratchet"
+      - "Reset the build circuit breaker"
+      - "Retry build for idea 42"
+
+  - name: architecture-review
+    model: claude-opus-4-6
+    description: >
+      Deep review of ST Metro component architecture. Reads CLAUDE.md,
+      BLUEPRINT.md, DATA_CONTRACT.md, and source code across Metroplex,
+      IdeaForge, YCE Harness, ST Records, and research agents. Maps data
+      flows, identifies integration points, and assesses blast radius of
+      proposed changes.
+    examples:
+      - "How does the build pipeline work?"
+      - "What would break if we change the job ID format?"
+      - "Map the data flow from signal to published repo"
+      - "Review the Metroplex architecture"
+
+execution:
+  mode: agent-sdk
+  # Full toolset: observe + diagnose + fix
+  tools: [Read, Glob, Grep, Write, Edit, Bash, WebSearch, WebFetch]
+  mcpServers: {}
+  canSpawnSubAgents: true
+  maxTurns: 50
+  timeout: 1800000  # 30 min — complex diagnosis + fix cycles need time

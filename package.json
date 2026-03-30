@@ -1,5 +1,5 @@
 {
-  "name": "agent-persona-academy",
+  "name": "st-agent-registry",
   "version": "0.1.0",
   "description": "Factory and runtime system for creating Claude persona agents",
   "type": "module",

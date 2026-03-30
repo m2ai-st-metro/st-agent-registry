@@ -77,7 +77,7 @@ cd persona-registry
 mkdir -p personas
 
 # Copy a persona
-cp -r /path/to/agent-persona-academy/personas/christensen personas/
+cp -r /path/to/st-agent-registry/personas/christensen personas/
 ```
 
 ### 3. Generate Index
@@ -85,7 +85,7 @@ cp -r /path/to/agent-persona-academy/personas/christensen personas/
 Create `personas/index.json` manually or use a script:
 
 ```bash
-# From agent-persona-academy (future feature)
+# From st-agent-registry (future feature)
 persona-academy registry generate-index ./personas
 ```
 

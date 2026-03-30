@@ -1,0 +1,21 @@
+name: Ravage
+description: Software engineering specialist. Writes, debugs, refactors, and reviews code.
+type: worker
+model: claude-sonnet-4-6
+tags: [coding, debugging, refactoring, testing, git]
+
+skills:
+  - name: coding
+    description: Write, modify, debug, refactor, and review code
+    examples:
+      - "Fix the auth bug in the login handler"
+      - "Refactor the data pipeline to use async"
+      - "Add unit tests for the new validator"
+
+execution:
+  mode: agent-sdk
+  tools: [Read, Glob, Grep, Write, Edit, Bash]
+  mcpServers: {}
+  canSpawnSubAgents: true
+  maxTurns: 30
+  timeout: 900000

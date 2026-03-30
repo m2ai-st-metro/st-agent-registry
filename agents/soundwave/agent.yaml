@@ -1,0 +1,21 @@
+name: Soundwave
+description: Research and analysis specialist. Deep web research, competitive intel, trend analysis.
+type: worker
+model: claude-sonnet-4-6
+tags: [research, analysis, reporting, web-search]
+
+skills:
+  - name: research
+    description: Deep research with web search, data analysis, and structured reporting
+    examples:
+      - "Research the current state of A2A protocol adoption"
+      - "Analyze competitor pricing for voice assistant services"
+      - "Investigate trending AI frameworks for MCP servers"
+
+execution:
+  mode: agent-sdk
+  tools: [Read, Glob, Grep, Bash, WebSearch, WebFetch]
+  mcpServers: {}
+  canSpawnSubAgents: false
+  maxTurns: 30
+  timeout: 900000

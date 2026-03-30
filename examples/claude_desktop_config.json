@@ -3,8 +3,8 @@
     "persona-academy": {
       "command": "node",
       "args": [
-        "/absolute/path/to/agent-persona-academy/dist/unified-server/index.js",
-        "--personas", "/absolute/path/to/agent-persona-academy/personas",
+        "/absolute/path/to/st-agent-registry/dist/unified-server/index.js",
+        "--personas", "/absolute/path/to/st-agent-registry/personas",
         "--default", "christensen"
       ]
     }

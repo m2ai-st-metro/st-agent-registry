@@ -253,7 +253,7 @@ Add to your `claude_desktop_config.json`:
     "persona-academy": {
       "command": "node",
       "args": [
-        "/path/to/agent-persona-academy/dist/unified-server/index.js",
+        "/path/to/st-agent-registry/dist/unified-server/index.js",
         "--personas", "/path/to/personas",
         "--default", "christensen"
       ]
@@ -548,7 +548,7 @@ The test command scores responses against validation markers:
 ## Project Structure
 
 ```
-agent-persona-academy/
+st-agent-registry/
 ├── src/
 │   ├── core/                    # Core engine
 │   │   ├── types.ts            # Type definitions

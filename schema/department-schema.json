@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/m2ai-portfolio/agent-persona-academy/schema/department-v1.json",
+  "$id": "https://github.com/m2ai-ultra-magnus-IF/st-agent-registry/schema/department-v1.json",
   "title": "Department Definition",
   "description": "Schema for defining persona departments with quality criteria and learning policies",
   "type": "object",

@@ -1,0 +1,12 @@
+agent_id: soundwave
+type: active
+registered_at: "2026-03-30"
+registered_by: manual
+source_path: ~/.claudeclaw/agents/soundwave
+last_synced_at: "2026-03-30"
+sync_hash: 3b46166a04078227dfecd19990c6d65609a6775b58dc4080e26d8529b50ebba9
+learning:
+  total_patches_applied: 0
+  total_patches_proposed: 0
+  last_patch_at: null
+  effectiveness_score: null

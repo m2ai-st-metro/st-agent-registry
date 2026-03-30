@@ -1,0 +1,12 @@
+agent_id: starscream
+type: active
+registered_at: "2026-03-30"
+registered_by: manual
+source_path: ~/.claudeclaw/agents/starscream
+last_synced_at: "2026-03-30"
+sync_hash: b3cf1560a5c258f1818818bbec6c7003da666d49c4d4d95050e120ffba630ba3
+learning:
+  total_patches_applied: 0
+  total_patches_proposed: 0
+  last_patch_at: null
+  effectiveness_score: null

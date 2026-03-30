@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/m2ai-ultra-magnus-IF/st-agent-registry/schema/agent-registry-v1.json",
+  "title": "Agent Registry Entry",
+  "description": "Schema for registry.yaml files that track active agents in the ST Agent Registry",
+  "type": "object",
+  "required": ["agent_id", "type", "registered_at", "registered_by", "source_path", "last_synced_at", "sync_hash", "learning"],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "description": "Unique identifier for the agent (matches directory name)",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "type": {
+      "type": "string",
+      "description": "Entity type: active (true agent with CLAUDE.md) or passive (prompt template persona)",
+      "enum": ["active", "passive"]
+    },
+    "registered_at": {
+      "type": "string",
+      "description": "ISO date when agent was registered",
+      "format": "date"
+    },
+    "registered_by": {
+      "type": "string",
+      "description": "How the agent was registered",
+      "enum": ["manual", "post-create-hook"]
+    },
+    "source_path": {
+      "type": "string",
+      "description": "Path to the runtime source of truth for this agent's config"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "description": "ISO date of last sync from registry to runtime",
+      "format": "date"
+    },
+    "sync_hash": {
+      "type": "string",
+      "description": "SHA256 hash of the agent's CLAUDE.md at last sync",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "learning": {
+      "type": "object",
+      "description": "Learning loop metadata for Sky-Lynx patch tracking",
+      "required": ["total_patches_applied", "total_patches_proposed"],
+      "properties": {
+        "total_patches_applied": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_patches_proposed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_patch_at": {
+          "type": ["string", "null"],
+          "description": "ISO date of last applied patch",
+          "format": "date"
+        },
+        "effectiveness_score": {
+          "type": ["number", "null"],
+          "description": "Aggregate effectiveness score from -1.0 to 1.0",
+          "minimum": -1.0,
+          "maximum": 1.0
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,12 @@
+agent_id: ravage
+type: active
+registered_at: "2026-03-30"
+registered_by: manual
+source_path: ~/.claudeclaw/agents/ravage
+last_synced_at: "2026-03-30"
+sync_hash: 2d2d808eb371671af51d761ed10a0961f51b36b012033c36609f209f2c892617
+learning:
+  total_patches_applied: 0
+  total_patches_proposed: 0
+  last_patch_at: null
+  effectiveness_score: null

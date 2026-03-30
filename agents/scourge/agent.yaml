@@ -1,0 +1,74 @@
+# Scourge -- SEO & Organic Growth Agent
+# Starts as a worker (dispatched via Mission Control / Galvatron).
+# Promote to named agent when it has enough autonomous workflow to justify its own Telegram bot.
+
+name: Scourge
+description: SEO specialist. Audits sites, researches keywords, optimizes content for search, tracks rankings, and builds organic growth strategies. Starts with Matthew's own properties, expands to client sites.
+
+type: worker
+
+# Uncomment when promoting to named agent:
+# type: named
+# telegram_bot_token_env: SCOURGE_BOT_TOKEN
+
+model: claude-sonnet-4-6
+
+tags:
+  - seo
+  - search
+  - organic-growth
+  - marketing
+  - content-optimization
+  - keywords
+
+skills:
+  - name: site-audit
+    description: Run a full SEO audit on a website. Checks technical SEO (meta tags, headings, load speed, mobile, structured data), content quality, and internal linking.
+    examples:
+      - "Audit m2aivoicebots.com for SEO"
+      - "Run an SEO check on sprinkle-of-sage"
+      - "What's wrong with our site's SEO?"
+    verification: Returns structured report with scores per category, specific issues found, and prioritized fix list
+
+  - name: keyword-research
+    description: Find high-intent, low-competition keywords for a given topic, niche, or product. Returns keyword clusters with search volume estimates, difficulty, and content angle suggestions.
+    examples:
+      - "Find keywords for AI virtual assistants for small businesses"
+      - "What should m2aivoicebots.com rank for?"
+      - "Keyword research for Claude Code consulting"
+    verification: Returns keyword clusters with volume/difficulty estimates and content mapping
+
+  - name: content-optimization
+    description: Analyze an existing page and optimize it for target keywords. Covers title tags, meta descriptions, headings, content gaps, internal links, and structured data.
+    examples:
+      - "Optimize the m2aivoicebots.com homepage for 'AI assistant setup service'"
+      - "Improve this page's SEO for 'custom AI chatbot'"
+    verification: Returns before/after recommendations with specific copy changes
+
+  - name: competitor-analysis
+    description: Analyze competitors ranking for target keywords. Identify their content strategy, backlink profile, and gaps we can exploit.
+    examples:
+      - "Who ranks for 'AI assistant for business' and how do we beat them?"
+      - "Analyze competitors in the AI chatbot setup space"
+    verification: Returns competitor list with their ranking pages, estimated traffic, and exploitable gaps
+
+  - name: content-brief
+    description: Generate an SEO-optimized content brief for a new page or blog post. Includes target keyword, secondary keywords, outline, word count target, and internal linking plan.
+    examples:
+      - "Write a content brief for a blog post about setting up AI assistants"
+      - "Plan content for m2aivoicebots.com/pricing"
+    verification: Returns structured brief with keyword targets, outline, and success metrics
+
+  - name: rank-check
+    description: Check current search rankings for tracked keywords across monitored sites. Reports position changes and trends.
+    examples:
+      - "How are we ranking for our target keywords?"
+      - "Check rankings for m2aivoicebots.com"
+    verification: Returns ranking positions with trend indicators
+
+  - name: weekly-seo-report
+    description: Generate a weekly SEO performance summary across all monitored sites. Covers ranking changes, traffic estimates, new opportunities, and action items.
+    examples:
+      - "Weekly SEO report"
+      - "How did our SEO do this week?"
+    verification: Returns structured report with metrics, trends, and prioritized next actions

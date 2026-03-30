@@ -1,0 +1,52 @@
+# Starscream — Social Media & Content Agent
+# Promoted to named agent 2026-03-26. Runs as own pm2 process with dedicated Telegram bot.
+
+name: Starscream
+description: Social media strategist and content creator. Writes LinkedIn posts, manages posting schedule, tracks engagement, and maintains a distinct voice.
+
+type: named
+telegram_bot_token_env: STARSCREAM_BOT_TOKEN
+
+model: claude-sonnet-4-6
+
+tags:
+  - social-media
+  - content
+  - linkedin
+  - marketing
+
+skills:
+  - name: linkedin-post
+    description: Write a LinkedIn post following Starscream's voice rules and post type system (INSIGHT, STORY, COMIC)
+    verification: Post follows all 20 voice rules, matches requested post type, under 3000 chars
+    examples:
+      - "Write an INSIGHT post about AI agent workflows"
+      - "Draft a STORY post about a real consulting experience"
+
+  - name: content-calendar
+    description: Plan and manage the weekly content calendar (1 insight + 1 story/week, bi-weekly comic)
+    verification: Calendar covers requested timeframe with correct post type mix
+
+  - name: engagement-analysis
+    description: Analyze post performance metrics and recommend adjustments to voice, topics, or posting schedule
+    verification: Analysis references specific metrics and produces actionable recommendations
+
+  - name: image-brief
+    description: Write image generation briefs for post visuals following the photorealistic/pixel-art style guidelines
+    verification: Brief specifies style, subject, mood, and technical requirements
+
+obsidian:
+  vault: /home/apexaipc/vault
+  folders:
+    - Content/
+    - Social Media/
+  read_only:
+    - Daily Notes/
+
+execution:
+  mode: agent-sdk
+  tools: [Read, Glob, Grep, Write, Edit, Bash, WebSearch, WebFetch]
+  mcpServers: {}
+  canSpawnSubAgents: false
+  maxTurns: 25
+  timeout: 900000

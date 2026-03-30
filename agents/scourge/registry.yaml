@@ -1,0 +1,12 @@
+agent_id: scourge
+type: active
+registered_at: "2026-03-30"
+registered_by: manual
+source_path: ~/.claudeclaw/agents/scourge
+last_synced_at: "2026-03-30"
+sync_hash: c571aa9a44104c8b97fba76065ff7286364783ee67861b77f7e3d097a42a0e76
+learning:
+  total_patches_applied: 0
+  total_patches_proposed: 0
+  last_patch_at: null
+  effectiveness_score: null

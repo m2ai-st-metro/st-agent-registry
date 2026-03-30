@@ -3,7 +3,7 @@
     "persona-academy": {
       "command": "node",
       "args": [
-        "./node_modules/agent-persona-academy/dist/unified-server/index.js",
+        "./node_modules/st-agent-registry/dist/unified-server/index.js",
         "--personas", "./personas"
       ]
     }
