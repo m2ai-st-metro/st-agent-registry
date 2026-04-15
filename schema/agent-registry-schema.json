@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/m2ai-ultra-magnus-IF/st-agent-registry/schema/agent-registry-v1.json",
+  "$id": "https://github.com/m2ai-st-metro/st-agent-registry/schema/agent-registry-v1.json",
   "title": "Agent Registry Entry",
   "description": "Schema for registry.yaml files that track active agents in the ST Agent Registry",
   "type": "object",
