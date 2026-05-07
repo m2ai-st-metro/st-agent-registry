@@ -11,6 +11,17 @@ skills:
       - "Fix the auth bug in the login handler"
       - "Refactor the data pipeline to use async"
       - "Add unit tests for the new validator"
+  - name: pr-review-toolkit
+    description: Multi-agent PR review (correctness, security, comprehension-gate, silent-failure-hunter, type-design)
+    examples:
+      - "Review PR #42 in metroplex"
+      - "Run comprehension-gate on this auth change"
+      - "Audit blast radius and rollback path on this migration"
+  - name: dark-code-audit
+    description: Repo-wide scanner for code that lacks decision logs, behavioral contracts, authorship trail, or dependency awareness
+    examples:
+      - "Audit ideaforge for dark code modules"
+      - "Score this repo's behavioral-contract coverage"
 
 execution:
   mode: agent-sdk
