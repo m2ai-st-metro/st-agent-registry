@@ -1,10 +1,11 @@
 agent_id: soundwave
 type: active
-registered_at: "2026-03-30"
+registered_at: '2026-03-30'
 registered_by: manual
-source_path: ~/.claudeclaw/agents/soundwave
-last_synced_at: "2026-03-30"
-sync_hash: 3b46166a04078227dfecd19990c6d65609a6775b58dc4080e26d8529b50ebba9
+# Canonical live source (post-vanilla-reset). Old ~/.claudeclaw/agents/soundwave is dead.
+source_path: ~/projects/command-center/agents/research/agent.md
+last_synced_at: '2026-06-09' # manual reconcile to live charter (ingestion meta-agent)
+sync_hash: null # invalidated by manual reconcile 2026-06-09; recompute on next automated sync
 learning:
   total_patches_applied: 0
   total_patches_proposed: 0

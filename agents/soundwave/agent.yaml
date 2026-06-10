@@ -1,16 +1,33 @@
 name: Soundwave
-description: Research and analysis specialist. Deep web research, competitive intel, trend analysis.
+description: Ingestion meta-agent for ST Metro. Owns the signal-intake pipeline end-to-end -- research-agents cron sponsorship, IdeaForge integrity, anomaly investigation. Dispatches code fixes to Kup.
 type: worker
 model: claude-sonnet-4-6
-tags: [research, analysis, reporting, web-search]
+tags: [ingestion, research, ideaforge, analysis, reporting, web-search, anomaly-investigation]
+
+# MCP: firecrawl (live-scrape fallback). Registry schema cannot yet express MCP
+# config richly; the canonical wiring lives in the live charter (see source_path
+# in registry.yaml). canSpawnSubAgents is false TODAY (reactive analyst); the
+# proactive interest-model evolution is expected to lift this -- see roadmap.
 
 skills:
-  - name: research
-    description: Deep research with web search, data analysis, and structured reporting
+  - name: ingestion
+    description: Own the full signal-intake pipeline -- signal volume trends, source hit-rates, surfacer quality, dismiss-rate tracking, end-to-end from intake to "classified idea ready for Metroplex triage"
     examples:
-      - "Research the current state of A2A protocol adoption"
-      - "Analyze competitor pricing for voice assistant services"
-      - "Investigate trending AI frameworks for MCP servers"
+      - 'Why did ingestion volume drop 40% this week across the research-agents fleet?'
+      - 'Audit surfacer quality: are classified ideas actually buildable?'
+      - 'Decide whether to retire the reddit scanner and add a HN scanner'
+  - name: ideaforge
+    description: IdeaForge integrity -- scoring pipeline, classification state machine, scoring-column integrity, idea-type distribution
+    examples:
+      - 'Investigate the IdeaForge scoring-column anomaly and dispatch the fix to Kup'
+      - 'Check classification state-machine drift in ideaforge.db'
+      - 'Report idea-type distribution shift over the last 30 days'
+  - name: research
+    description: Deep web research, competitive intel, trend analysis, structured reporting with cross-referenced sources
+    examples:
+      - 'Research the current state of A2A protocol adoption'
+      - 'Investigate trending agent frameworks worth a research-agents query'
+      - 'Cross-reference 3 sources on this scraped claim before surfacing it'
 
 execution:
   mode: agent-sdk
