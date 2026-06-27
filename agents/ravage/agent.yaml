@@ -8,20 +8,38 @@ skills:
   - name: coding
     description: Write, modify, debug, refactor, and review code
     examples:
-      - "Fix the auth bug in the login handler"
-      - "Refactor the data pipeline to use async"
-      - "Add unit tests for the new validator"
+      - 'Fix the auth bug in the login handler'
+      - 'Refactor the data pipeline to use async'
+      - 'Add unit tests for the new validator'
   - name: pr-review-toolkit
     description: Multi-agent PR review (correctness, security, comprehension-gate, silent-failure-hunter, type-design)
     examples:
-      - "Review PR #42 in metroplex"
-      - "Run comprehension-gate on this auth change"
-      - "Audit blast radius and rollback path on this migration"
+      - 'Review PR #42 in metroplex'
+      - 'Run comprehension-gate on this auth change'
+      - 'Audit blast radius and rollback path on this migration'
   - name: dark-code-audit
     description: Repo-wide scanner for code that lacks decision logs, behavioral contracts, authorship trail, or dependency awareness
     examples:
-      - "Audit ideaforge for dark code modules"
+      - 'Audit ideaforge for dark code modules'
       - "Score this repo's behavioral-contract coverage"
+  - name: optimize-description
+    description: "Rewrite a skill's description field for maximum agent discoverability: clear trigger conditions, explicit input/output contracts, and disambiguation from similar skills. Ravage's primary quality bar for skill-forge PRs."
+    examples:
+      - 'Rewrite this SKILL.md description to add explicit Use-when triggers'
+      - 'This skill description is capability prose with no trigger conditions'
+      - 'Make this skill discoverable by the SDK'
+  - name: spec-gap-detector
+    description: 'Stress-test a spec or SKILL.md for ambiguity, missing constraints, unhandled edge cases, and prompt-injection exposure'
+    examples:
+      - 'Find the gaps in this skill spec before approving it'
+      - 'Is this SKILL.md unambiguous and injection-safe?'
+      - 'What edge cases does this spec miss?'
+  - name: code-review-memory
+    description: 'Accumulate repo-specific review lessons and surface them before re-reviewing the same file or module, so recurring issues are not flagged for the first time twice'
+    examples:
+      - 'What do we know about this file from past reviews?'
+      - 'Surface prior review lessons for skill-forge before this PR'
+      - 'Record this recurring SKILL.md anti-pattern for next time'
 
 execution:
   mode: agent-sdk
